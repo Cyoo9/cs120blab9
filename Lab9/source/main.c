@@ -37,44 +37,73 @@ void PWM_off() {
 	TCCR3B = 0x00;
 }
 
-enum States {Start, Off, Pressed} state;
+enum States {Start, Off, cPressed, dPressed, ePressed} state;
+
 
 void Tick() {
 	switch(state) {
 		case Start:
-		
 			state = Off;
 			break;
 		case Off:
 			if((~PINA & 0x01) == 1) {
-				state = Pressed;
-				set_PWM(261.63);
+                                state = cPressed;
+                        }
+                        else if((~PINA & 0x02) == 2) {
+                                state = dPressed;
+                        }
+                        else if((~PINA & 0x04) == 4) {
+                                state = ePressed;
+                        }
+
+			else {
+				state = Off;
 			}
-			else if((~PINA & 0x02) == 2) {
-				state = Pressed;
-				set_PWM(293.66);
-			}
-			else if((~PINA & 0x04) == 4) {
-				state = Pressed;
-				set_PWM(329.63);
+			break;
+		case cPressed:
+			if((~PINA & 0x01) == 1) {
+				state = cPressed;
 			}
 			else {
 				state = Off;
 			}
 			break;
-		case Pressed:
-			if((~PINA & 0x07) == 0) { 
-				set_PWM(0);
-				state = Off;
+		
+		case dPressed:
+			if((~PINA & 0x02) == 2) {
+				state = dPressed;
 			}
 			else {
-				state = Pressed;
+				state = Off;
+			}
+			break;
+		case ePressed:
+			if((~PINA & 0x04) == 4) {
+				state = ePressed;
+			}
+			else {
+				state = Off;
 			}
 			break;
 		default:
 			break;
 	}
-
+	switch(state) {
+		case Off:
+			set_PWM(0);
+			break;
+		case cPressed:
+			set_PWM(261.63);
+			break;
+		case dPressed:
+			set_PWM(293.66);
+			break;
+		case ePressed:
+			set_PWM(329.63);
+			break;
+		default:
+			break;
+	}
 
 
 }
@@ -85,8 +114,10 @@ int main(void) {
     /* Insert your solution below */
 	PWM_on();
 	state = Start;
+	
     while (1) {
 	Tick();
+	
     }
     return 0;
 }
