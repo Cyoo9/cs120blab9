@@ -38,7 +38,7 @@ void PWM_off() {
 }
 
 
-enum State {Start, Init, Toggle, Down, Up} state;
+enum State {Start, Init, Toggle, Down, Up, Hold} state;
 double scale[8] = {261.33, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25};
 unsigned char index = 0;
 unsigned char toggleVar = 1;
@@ -62,32 +62,41 @@ void Tick() {
 		break;
 	case Up:
 		if(index < 7) {
-			index++;
-		}
-		if(toggleVar == 1) {  //sound on 
-			set_PWM(scale[index]);
-		}
-		state = Init;
-		break;
-	case Down:
-		if(index > 0) {
-			index--;
+			index = index + 1;
 		}
 		if(toggleVar == 1) {
 			set_PWM(scale[index]);
 		}
-		state = Init;
+		state = Hold;
+		break;
+	case Down:
+		if(index > 0) {
+			index = index - 1;
+		}
+		if(toggleVar == 1) {
+			set_PWM(scale[index]);
+		}
+		state = Hold;
 		break;
 	case Toggle:
 		if(toggleVar == 1) {
 			toggleVar = 0;
-			PWM_off(); //turn it off
+			set_PWM(0);
+		 //turn it off
 		}
 		else { 
+			set_PWM(scale[index]);
 			toggleVar = 1;
-			PWM_on();
 		}
-		state = Init;
+		state = Hold;
+		break;
+	case Hold:
+		if((~PINA &  0x07) == 0) {
+			state = Init;
+		}
+		else {
+			state = Hold;
+		}
 		break;
 	default:
 		break;
